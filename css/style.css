@@ -1,0 +1,8 @@
+textarea{
+  height: 85vh;
+  width: 600px;
+  font-family: sans-serif;
+  color: black;
+  font-weight: bold;
+  border: 2px solid black;
+}
