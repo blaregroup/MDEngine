@@ -21,17 +21,162 @@ Reference Docs:
 
 // importing module
 import java.io.*;
+import java.util.regex.*;
+
 
 
 
 /* Markdown To HTML Generator */
-class MarkdownToHTMLGenerator{
+class MarkDownSyntaxParser{
+    
+    
+    /* Patterns */
+    private final String EXP_HEADING = "(\n(#+) (.+))";
+    private final String EXP_GLOBAL  = "(.+)";
+    private final String EXP_HRRULER = "(((\n)(---))|((\n)(___))|((\n)(\\*\\*\\*)))"; // horizontal line
+    private final String EXP_OL_LIST = "((\n( *)(\\d+)(\\. )(.*))+)";	// order list
+    private final String EXP_BLOCK_C = "(\n(```)([^```]+)(```))"; // code block
+    private final String EXP_UL_LIST = "((\n( *)([\\-\\+\\*]+ )(.*))+)";  // unorder list
+    private final String EXP_HEAD_HR = "((.+)\n((={3,})|(\\-{3,})))"; // ALT heading
+    private final String EXP_TABLEBD = "(\n(\\|?)([\\|\\w \\d]+)(\\|?)\n([ \\-\\|\\:]{7,})\n((\\|?)(.+)(\\|?)\n)+)"; // Table
+    private final String EXP_INLINES = "(.+)";
+    private final String EXP_INDENTS = "(\n( {4,})(.+))+";
+    private final String EXP_BLOCKQ  = "((\n)(&gt;+?)(.+))";
 
-	public String convertToHTML(String data){
-		return data; // Converted HTML String
-	}
+    public String EXP_ALL = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
+                                          EXP_BLOCK_C,
+                                          EXP_HEADING, 
+                                          EXP_HRRULER,
+                                          EXP_OL_LIST,
+                                          EXP_UL_LIST,
+                                          EXP_HEAD_HR,
+                                          EXP_TABLEBD,
+                                          EXP_INLINES,
+                                          EXP_INDENTS,
+                                          EXP_BLOCKQ,
+                                          EXP_GLOBAL);
+    
+    private String inputdata; // Input Raw Data Variable
+    private String outputdata="";
+    
+    // Constructor
+    MarkDownSyntaxParser(String data){
+        inputdata = data;
+        ExtractData();
+    }
+    
+    /* Extract Data*/
+    private void ExtractData(){
+        Pattern pattern = Pattern.compile(EXP_ALL);
+        Matcher matcher = pattern.matcher(inputdata);
+        while(matcher.find()){
+            ProcessData(inputdata.substring(matcher.start(), matcher.end()));
+          }
+    }
+    
+    /*  Method That Split and Process Tags */
+    private void ProcessData(String line){
+        /* If Heading Expression Match Then Pass It To Expression Handling Method */
+        if (line.matches(EXP_HEADING)){
+            outputdata += HeadingProcessor(line);
+        
+        }/* If Horizontal line Expression Match Then Pass It To Expression Handling Method */
+        else if(line.matches(EXP_HRRULER)){
+            outputdata += HorizontalProcessor(line);
+        
+        }/* If Ordered List Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_OL_LIST)){
+            outputdata += OrderListProcessor(line);
+            
+        }/* If UnOrdered List Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_UL_LIST)){
+            outputdata += UnOrderListProcessor(line);
+        
+        }/* If Block Code Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_BLOCK_C)){
+            outputdata += CodeProcessor(line);
+
+        }/* If Heading With Horizontal Line Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_HEAD_HR)){
+            outputdata += HRHeadingProcessor(line);
+
+        }/* If Table Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_TABLEBD)){
+            outputdata += TableProcessor(line);
+
+        }/* If Inline Code Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_INLINES)){
+            outputdata += InlineProcessor(line);
+
+        }/* If Indent Code Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_INDENTS)){
+            outputdata += IndentProcessor(line);
+
+        }/* If Blockquotes Expression Match Then Pass It To Expression Handling Method */
+        else if (line.matches(EXP_BLOCKQ)){
+            outputdata += BlockQProcessor(line);
+
+        }else{
+            /* If Global Expression Match Then Pass It To Expression Handling Method */
+            outputdata += GlobalProcessor(line);
+        }
+    }
+    /* Inline Expression Processor */
+    private String InlineProcessor(String line){
+        return line;
+    }
+    /* Indent Expression Processor */
+    private String IndentProcessor(String line){
+        return line;
+    }
+    /* Horizontal Line Expression Processor */
+    private String HRHeadingProcessor(String line){
+        return line;
+    }
+    /* Table Expression Processor */
+    private String TableProcessor(String line){
+        return line;
+    }
+    /* BlockQuote Expression Processor */
+    private String BlockQProcessor(String line){
+        return line;
+    }
+    /* Ordered Expression Processor */
+    private String OrderListProcessor(String line){
+        return String.format("<ol> %s </ol>\n",line);
+    }
+    
+    /* UnOrder List Processor */
+    private String UnOrderListProcessor(String line){
+        return String.format("<ul> %s </ul>\n",line);
+    }
+    
+    /* Code Processor */
+    private String CodeProcessor(String line){
+        return String.format("<code> %s </code>\n",line);
+    }
+    
+    /* Horizontal Line */
+    private String HorizontalProcessor(String line){
+        line = "<br />\n";
+        return line;
+    }
+    
+    /* Heading Processor */
+    private String HeadingProcessor(String line){
+        return String.format("<h1> %s </h1>\n",line);
+    }
+    
+    /* Global Processor */
+    private String GlobalProcessor(String line){
+        return String.format("%s\n",line);
+    }
+    
+    /*  get HTML data */
+    public String getHTML(){
+        return outputdata;
+    }
 }
-
 
 /* MarkDown To HTML Convertion Engine */
 public class MarkDownEngine {
@@ -41,7 +186,7 @@ public class MarkDownEngine {
 	private static final String output_file = "output_html_view.html";  // Output File Path
 	private String input_data; // Input Markdown Text
 	private String output_data; // Output HTML Source Code
-	private MarkdownToHTMLGenerator converter;
+	private MarkDownSyntaxParser converter;
 
 	/* Constructor */
 	public MarkDownEngine(){
@@ -50,8 +195,8 @@ public class MarkDownEngine {
 		input_data = ReadFileData(input_file);
 		//System.out.println(input_data); // Our Input Data as String
 		
-		converter = new MarkdownToHTMLGenerator();
-		output_data = converter.convertToHTML(input_data);
+		converter = new MarkDownSyntaxParser(input_data);
+		output_data = converter.getHTML();
 
 		// Write Output
 		WriteFileData(output_file, output_data);
