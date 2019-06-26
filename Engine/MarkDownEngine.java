@@ -15,6 +15,8 @@
 Reference Docs:
 		https://docs.oracle.com/javase/7/docs/api/java/lang/String.html
 		https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+        https://www.markdownguide.org/extended-syntax/
+        https://daringfireball.net/projects/markdown/syntax#header
 		
 
 */
@@ -31,7 +33,7 @@ class MarkDownSyntaxParser{
     
     
     /* Patterns */
-    private final String EXP_HEADING = "(\n(#+) (.+))";
+    private final String EXP_HEADING = "(\n(#+ .+))";
     private final String EXP_GLOBAL  = "(.+)";
     private final String EXP_HRRULER = "(((\n)(---))|((\n)(___))|((\n)(\\*\\*\\*)))"; // horizontal line
     private final String EXP_OL_LIST = "((\n( *)(\\d+)(\\. )(.*))+)";	// order list
@@ -39,11 +41,10 @@ class MarkDownSyntaxParser{
     private final String EXP_UL_LIST = "((\n( *)([\\-\\+\\*]+ )(.*))+)";  // unorder list
     private final String EXP_HEAD_HR = "((.+)\n((={3,})|(\\-{3,})))"; // ALT heading
     private final String EXP_TABLEBD = "(\n(\\|?)([\\|\\w \\d]+)(\\|?)\n([ \\-\\|\\:]{7,})\n((\\|?)(.+)(\\|?)\n)+)"; // Table
-    private final String EXP_INLINES = "(.+)";
     private final String EXP_INDENTS = "(\n( {4,})(.+))+";
-    private final String EXP_BLOCKQ  = "((\n)(&gt;+?)(.+))";
+    private final String EXP_BLOCKQ  = "((\n(( &gt;|&gt;)+) (.+))+)";
 
-    public String EXP_ALL = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
+    public String EXP_ALL = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
                                           EXP_BLOCK_C,
                                           EXP_HEADING, 
                                           EXP_HRRULER,
@@ -51,7 +52,6 @@ class MarkDownSyntaxParser{
                                           EXP_UL_LIST,
                                           EXP_HEAD_HR,
                                           EXP_TABLEBD,
-                                          EXP_INLINES,
                                           EXP_INDENTS,
                                           EXP_BLOCKQ,
                                           EXP_GLOBAL);
@@ -61,7 +61,7 @@ class MarkDownSyntaxParser{
     
     // Constructor
     MarkDownSyntaxParser(String data){
-        inputdata = data;
+        inputdata = escapeHtml(data);
         ExtractData();
     }
     
@@ -105,10 +105,14 @@ class MarkDownSyntaxParser{
             outputdata += TableProcessor(line);
 
         }/* If Inline Code Expression Match Then Pass It To Expression Handling Method */
-        else if (line.matches(EXP_INLINES)){
-            outputdata += InlineProcessor(line);
-
-        }/* If Indent Code Expression Match Then Pass It To Expression Handling Method */
+        
+        //else if (line.matches(EXP_INLINES)){
+        //    outputdata += InlineProcessor(line);
+        //
+        //}
+        
+        
+        /* If Indent Code Expression Match Then Pass It To Expression Handling Method */
         else if (line.matches(EXP_INDENTS)){
             outputdata += IndentProcessor(line);
 
@@ -123,6 +127,7 @@ class MarkDownSyntaxParser{
     }
     /* Inline Expression Processor */
     private String InlineProcessor(String line){
+        System.out.println(line);
         return line;
     }
     /* Indent Expression Processor */
@@ -131,7 +136,8 @@ class MarkDownSyntaxParser{
     }
     /* Horizontal Line Expression Processor */
     private String HRHeadingProcessor(String line){
-        return line;
+        String[] args = line.split("\n", 2);
+        return String.format("<br /> <h%d> %s </h%d>  <hr />", 2, args[0], 2);
     }
     /* Table Expression Processor */
     private String TableProcessor(String line){
@@ -139,7 +145,43 @@ class MarkDownSyntaxParser{
     }
     /* BlockQuote Expression Processor */
     private String BlockQProcessor(String line){
-        return line;
+        //System.out.println(String.format("Input %s", line));
+        String output="\n\n<blockquote>";
+        int lastn=1;
+        int ttl = 0;
+        
+        for(String l: line.split("\n")){
+            if(l.length()!=0){
+            
+                String[] args = l.split("(?<=(&gt;| &gt;))");
+
+                if(lastn>(args.length-1)){
+                    lastn=args.length-1;
+                    ttl -=1;
+                    System.out.println(String.format(" Child Close %s %s", args[args.length-1], l));
+                    output += String.format("\n%s\n</blockquote>\n", args[args.length-1]);
+
+                }else if(lastn==(args.length-1)){
+                    //lastn=args.length-1;
+                    System.out.println(String.format(" Continue %s %s", args[args.length-1], l));
+                    output += String.format("%s\n", args[args.length-1]);
+                    
+                }else{
+                    lastn=args.length-1;
+                    ttl +=1;
+                    System.out.println(String.format(" New Child %s %s", args[args.length-1], l));
+                
+                    output += String.format("\n<blockquote>\n %s", args[args.length-1]);
+                }
+            }
+            
+        }
+        for(int i=0; i<=ttl; i++){
+        output += "\n</blockquote>\n";
+        }
+        
+        
+        return output;
     }
     /* Ordered Expression Processor */
     private String OrderListProcessor(String line){
@@ -164,7 +206,8 @@ class MarkDownSyntaxParser{
     
     /* Heading Processor */
     private String HeadingProcessor(String line){
-        return String.format("<h1> %s </h1>\n",line);
+        String[] args = line.split(" ",2);
+        return String.format("<h%d> %s </h%d>\n",args[0].length(), args[1],args[0].length());
     }
     
     /* Global Processor */
@@ -176,7 +219,21 @@ class MarkDownSyntaxParser{
     public String getHTML(){
         return outputdata;
     }
+    
+    /* Escape HTML */
+    private String escapeHtml(String unsafe) {
+    
+
+        unsafe = unsafe.replaceAll("&", "&amp;");
+        unsafe = unsafe.replaceAll("<", "&lt;");
+        unsafe = unsafe.replaceAll(">", "&gt;");
+        unsafe = unsafe.replaceAll("\"", "&quot;");
+        unsafe = unsafe.replaceAll("\'", "&#039;");
+    return unsafe;
+    }
 }
+
+
 
 /* MarkDown To HTML Convertion Engine */
 public class MarkDownEngine {
