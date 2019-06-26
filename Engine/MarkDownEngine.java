@@ -59,10 +59,6 @@ class MarkDownSyntaxParser{
     private String inputdata; // Input Raw Data Variable
     private String outputdata="";
     
-    private String content ="";
-    private String headingNumber="";
-    private int i;
-
     // Constructor
     MarkDownSyntaxParser(String data){
         inputdata = data;
@@ -82,16 +78,7 @@ class MarkDownSyntaxParser{
     private void ProcessData(String line){
         /* If Heading Expression Match Then Pass It To Expression Handling Method */
         if (line.matches(EXP_HEADING)){
-            
-            //for divide  # pattern from line
-            for(i=1;i<=line.length();i++)
-            {
-                if(line.charAt(i)==' '){break;}
-            }    
-            
-            content = line.substring((i),line.length());
-            
-            outputdata += HeadingProcessor(content,i);
+            outputdata += HeadingProcessor(line);
         
         }/* If Horizontal line Expression Match Then Pass It To Expression Handling Method */
         else if(line.matches(EXP_HRRULER)){
@@ -99,12 +86,10 @@ class MarkDownSyntaxParser{
         
         }/* If Ordered List Expression Match Then Pass It To Expression Handling Method */
         else if (line.matches(EXP_OL_LIST)){
-            
             outputdata += OrderListProcessor(line);
             
         }/* If UnOrdered List Expression Match Then Pass It To Expression Handling Method */
         else if (line.matches(EXP_UL_LIST)){
-            //System.out.println("\n\n"+line);
             outputdata += UnOrderListProcessor(line);
         
         }/* If Block Code Expression Match Then Pass It To Expression Handling Method */
@@ -121,9 +106,6 @@ class MarkDownSyntaxParser{
 
         }/* If Inline Code Expression Match Then Pass It To Expression Handling Method */
         else if (line.matches(EXP_INLINES)){
-
-            //System.out.println(""+line);
-
             outputdata += InlineProcessor(line);
 
         }/* If Indent Code Expression Match Then Pass It To Expression Handling Method */
@@ -161,10 +143,7 @@ class MarkDownSyntaxParser{
     }
     /* Ordered Expression Processor */
     private String OrderListProcessor(String line){
-        String listtag = "<li>";
-        String endlisttag = "</li>";
-
-        return String.format("<ol>%s %s %s</ol>\n",listtag,line,endlisttag);
+        return String.format("<ol> %s </ol>\n",line);
     }
     
     /* UnOrder List Processor */
@@ -179,17 +158,13 @@ class MarkDownSyntaxParser{
     
     /* Horizontal Line */
     private String HorizontalProcessor(String line){
-        //line = "<br />\n";
-        return String.format("<hr /> \n");
+        line = "<br />\n";
+        return line;
     }
     
     /* Heading Processor */
-    private String HeadingProcessor(String content,int i){
-        
-         headingNumber = Integer.toString((i-1));
-
-        return String.format("<h%s> %s </h%s>\n",headingNumber,content,headingNumber);
-        
+    private String HeadingProcessor(String line){
+        return String.format("<h1> %s </h1>\n",line);
     }
     
     /* Global Processor */
