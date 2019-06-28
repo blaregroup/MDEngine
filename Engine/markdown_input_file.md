@@ -1,3 +1,4 @@
+
 ---
 __Advertisement :)__
 
@@ -149,10 +150,10 @@ Right aligned columns
 | ext    | extension to be used for dest files. |
 
 
-Markdown | Less | Pretty
---- | --- | ---
-*Still* | `renders` | **nicely**
-1 | 2 | 3
+|Markdown | Less | Pretty|
+|--- | --- | ---|
+|*Still* | `renders` | **nicely**|
+|1 | 2 | 3|
 
 ## Links
 
