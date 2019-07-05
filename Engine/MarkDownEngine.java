@@ -43,7 +43,7 @@ class MarkDownSyntaxParser{
     private final String EXP_TABLEBD = "(\n(\\|?)([\\|\\w \\d]+)(\\|?)\n([ \\-\\|\\:]{7,})\n((\\|?)(.+)(\\|?)\n)+)"; // Table
     private final String EXP_INDENTS = "(\n( {4,})(.+))+";
     private final String EXP_BLOCKQ  = "((\n(( &gt;|&gt;)+) (.+))+)";
-
+    
     public String EXP_ALL = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
                                           EXP_BLOCK_C,
                                           EXP_HEADING, 
@@ -141,6 +141,7 @@ class MarkDownSyntaxParser{
     }
     /* Table Expression Processor */
     private String TableProcessor(String line){
+        
         return line;
     }
     /* BlockQuote Expression Processor */
@@ -158,18 +159,18 @@ class MarkDownSyntaxParser{
                 if(lastn>(args.length-1)){
                     lastn=args.length-1;
                     ttl -=1;
-                    System.out.println(String.format(" Child Close %s %s", args[args.length-1], l));
+                   System.out.println(String.format(" Child Close %s %s", args[args.length-1], l));
                     output += String.format("\n%s\n</blockquote>\n", args[args.length-1]);
 
                 }else if(lastn==(args.length-1)){
                     //lastn=args.length-1;
-                    System.out.println(String.format(" Continue %s %s", args[args.length-1], l));
+                   System.out.println(String.format(" Continue %s %s", args[args.length-1], l));
                     output += String.format("%s\n", args[args.length-1]);
                     
                 }else{
                     lastn=args.length-1;
                     ttl +=1;
-                    System.out.println(String.format(" New Child %s %s", args[args.length-1], l));
+                 System.out.println(String.format(" New Child %s %s", args[args.length-1], l));
                 
                     output += String.format("\n<blockquote>\n %s", args[args.length-1]);
                 }
@@ -185,12 +186,35 @@ class MarkDownSyntaxParser{
     }
     /* Ordered Expression Processor */
     private String OrderListProcessor(String line){
-        return String.format("<ol> %s </ol>\n",line);
+        String[] tmplist = line.split("\n");
+        String tmpobj = "";
+        
+        
+        for(int k=1;k<tmplist.length;k++)
+        {   
+           String[] list = tmplist[k].split(" ",2);
+            tmpobj += String.format("<li>%s</li>",list[1]);
+            
+        }
+        
+
+        return String.format("<ol> %s </ol>\n",tmpobj);
     }
     
     /* UnOrder List Processor */
     private String UnOrderListProcessor(String line){
-        return String.format("<ul> %s </ul>\n",line);
+        String[] tmplist = line.split("\n");
+        String tmpobj = "";
+        
+
+        for(int k=1;k<tmplist.length;k++)
+        {   
+           String[] list = tmplist[k].split(" ",2);
+            tmpobj += String.format("<li>%s</li>",list[1]);
+            
+        }
+        
+        return String.format("<ul>%s</ul>\n",tmpobj);
     }
     
     /* Code Processor */
